@@ -33,9 +33,9 @@ function init() {
    showthis1 = document.getElementById("showthis1");
    showthis2 = document.getElementById("showthis2");
 
-   guessinput.maxlength = max_positions;
+   guessinput.maxLength = max_positions;
    guessinput.size = max_positions;
-   secretinput.maxlength = max_positions;
+   secretinput.maxLength = max_positions;
    secretinput.size = max_positions;
 
    guessform.onsubmit = guess_submitted;
@@ -88,6 +88,13 @@ function secret_submitted() {
 }
 
 function guess_submitted() {
+
+   // if the player hasn't submitted a value, let
+   // the computer make the next guess
+   if(guessinput.value == "") {
+      guessinput.value = make_guess();
+   }
+
    var valid = parse_combination(guessinput.value, guess_combination);
 
    if(valid) {
@@ -101,8 +108,22 @@ function guess_submitted() {
    return(false);
 }
 
+function make_guess() {
+   for(var i = 0; i < solution_set.length; i++) {
+      if(solution_set[i].included) {
+         var guessvalue = solution_set[i].combination.join('');
+         return(guessvalue);
+      }
+   }
+   return("");    // should never be reached
+}
+
 function parse_combination(v, c) {
    var n = parseInt(v);
+
+   if(isNaN(n)) {
+      return(false);
+   }
 
    // erase combination array
    c.splice(0, c.length);
