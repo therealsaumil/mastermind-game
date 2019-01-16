@@ -57,6 +57,7 @@ function generate_combination(c) {
    }
 }
 
+// recursive function to fill up the solution set
 function fill_solution_set(p) {
    for(var i = 0; i < max_colours; i++) {
       guess_combination[p] = i + 1;
@@ -73,6 +74,7 @@ function fill_solution_set(p) {
    }
 }
 
+// set the master combination and hide the value
 function secret_submitted() {
    var valid = parse_combination(secretinput.value, master_combination);
 
@@ -87,6 +89,10 @@ function secret_submitted() {
    return(false);
 }
 
+// process a submitted guess
+// if the value is left blank, the computer will
+// choose a guess from the first available element
+// in the solution set
 function guess_submitted() {
 
    // if the player hasn't submitted a value, let
@@ -108,6 +114,8 @@ function guess_submitted() {
    return(false);
 }
 
+// let the computer choose the first available combination in the
+// solution set as a possible guess
 function make_guess() {
    for(var i = 0; i < solution_set.length; i++) {
       if(solution_set[i].included) {
@@ -121,7 +129,7 @@ function make_guess() {
 function parse_combination(v, c) {
    var n = parseInt(v);
 
-   if(isNaN(n)) {
+   if(isNaN(n) || v.length != max_positions) {
       return(false);
    }
 
@@ -146,6 +154,7 @@ function compare_combinations(c1, c2) {
    var ct2 = Array.from(c2);
    var rating = {white: 0, black: 0};
 
+   // count the number of black ratings
    for(var i = 0; i < max_positions; i++) {
       if(ct1[i] == ct2[i] && ct1[i] != 0 && ct2[i] != 0) {
          ct1[i] = 0;
@@ -154,6 +163,7 @@ function compare_combinations(c1, c2) {
       }
    }
 
+   // count the number of white ratings
    for(var i = 0; i < max_positions; i++) {
       for(var j = 0; j < max_positions; j++) {
          if(j == i) {
