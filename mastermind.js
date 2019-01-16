@@ -1,3 +1,9 @@
+// mastermind.js
+// by Saumil Shah
+//
+// A simplistic implementation of Donald Knuth's Mastermind
+// algorithm
+
 var max_colours = 6;
 var max_positions = 4;
 
