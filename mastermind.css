@@ -1,13 +1,50 @@
 body {
    border: 0;
-   margin: 0;
+   margin: 20px;
    padding: 0;
    background-color: white;
    color: black;
    font-family: sans-serif;
+   font-size: 20px;
    width: 100%;
+}
+
+h1 {
+   font-size: 28px;
+}
+
+h2 {
+   font-size: 24px;
+}
+
+input, table {
+   font-size: 20px;
+}
+
+span {
+   display: inline-block;
 }
 
 .hidden {
    display: none;
+}
+
+.leftcontainer, .rightcontainer {
+   margin: 0px;
+   padding: 0px;
+   vertical-align: top;
+}
+
+.leftcontainer {
+   padding-right: 20px;
+}
+
+.rightcontainer {
+   padding-left: 20px;
+   border-left: 1px dashed black;
+}
+
+.rating {
+   padding: 0px;
+   padding-left: 10px;
 }

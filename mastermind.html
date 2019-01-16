@@ -6,30 +6,26 @@
 <body>
    <h1>MASTERMIND</h1>
    <h2>by Saumil Shah</h2>
-   <div>
-      <span>
-         <div id="hidethis">
-            <h2>ENTER SECRET COMBINATION</h2>
-            <form id="secretform">
-               <input type=text name="secret" id="secret">
-               <input type=submit value="SET CODE">
-            </form>
-         </div>
-         <div class="hidden" id="showthis1">
-            <h2>GUESS LIST</h2>
-            <table id="output"></table>
-            <form id="guessform">
-               <input type=text name="guess" id="guess">
-               <input type=submit value="GUESS">
-            </form>
-         </div>
+   <span class="leftcontainer">
+      <span id="hidethis">
+         <h2>ENTER SECRET CODE</h2>
+         <form id="secretform">
+            <input type=text name="secret" id="secret">
+            <input type=submit value="SET CODE">
+         </form>
       </span>
-      <span>
-         <div class="hidden" id="showthis2">
-            <h2>SOLUTIONS REMAINING <span id="solutions_count"></span><h2>
-            <table id="list"></table>
-         </div>
+      <span class="hidden" id="showthis1">
+         <h2>GUESS LIST</h2>
+         <table id="output"></table>
+         <form id="guessform">
+            <input type=text name="guess" id="guess">
+            <input type=submit value="GUESS">
+         </form>
       </span>
-   </div>
+   </span>
+   <span class="hidden rightcontainer" id="showthis2">
+      <h2>SOLUTIONS REMAINING <span id="solutions_count"></span><h2>
+      <table id="list"></table>
+   </span>
 </body>
 </html>

@@ -72,8 +72,8 @@ function secret_submitted() {
 
    if(valid) {
       hidethis.style.display = "none";
-      showthis1.style.display = "block";
-      showthis2.style.display = "block";
+      showthis1.style.display = "inline-block";
+      showthis2.style.display = "inline-block";
    }
    else {
       secretinput.value = "";
@@ -164,6 +164,7 @@ function make_row(c, r) {
       }
       var td = document.createElement("td");
       td.innerHTML = rating_string;
+      td.className = "rating";
       tr.appendChild(td);
    }
    return(tr);
