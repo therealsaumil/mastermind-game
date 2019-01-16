@@ -7,45 +7,87 @@
 var max_colours = 6;
 var max_positions = 4;
 
+var heading = null;
 var output = null;
 var list = null;
+var setupform = null;
 var guessform = null;
 var guessinput = null;
 var secretform = null;
 var secretinput = null;
+var positionsinput = null;
+var coloursinput = null;
 var hidethis = null;
 var showthis1 = null;
 var showthis2 = null;
+var showthis3 = null;
 var solutions_count = null;
 var master_combination = [];
 var guess_combination = [];
 var solution_set = [];
 
 function init() {
+   heading = document.getElementById("heading");
    output = document.getElementById("output");
    list = document.getElementById("list");
+   setupform = document.getElementById("setupform");
    guessform = document.getElementById("guessform");
    guessinput = document.getElementById("guess");
    solutions_count = document.getElementById("solutions_count");
    secretform = document.getElementById("secretform");
    secretinput = document.getElementById("secret");
+   positionsinput = document.getElementById("positions");
+   coloursinput = document.getElementById("colours");
    hidethis = document.getElementById("hidethis");
    showthis1 = document.getElementById("showthis1");
    showthis2 = document.getElementById("showthis2");
+   showthis3 = document.getElementById("showthis3");
 
-   guessinput.maxLength = max_positions;
-   guessinput.size = max_positions;
-   secretinput.maxLength = max_positions;
-   secretinput.size = max_positions;
+   positionsinput.value = max_positions;
+   coloursinput.value = max_colours;
 
+   setupform.onsubmit = setup_submitted;
    guessform.onsubmit = guess_submitted;
    secretform.onsubmit = secret_submitted;
    guessinput.value = "";
    secretinput.value = "";
+}
 
-   //generate_random_combination(master_combination);
-   fill_solution_set(0);
-   print_solution_set();
+function setup_submitted() {
+   var valid = true;
+   var positions = parseInt(positionsinput.value);
+   var colours = parseInt(coloursinput.value);
+
+   if(isNaN(positions) || positions <= 0) {
+      positionsinput.value = max_positions;
+      valid = false;
+   }
+
+   if(isNaN(colours) || colours <= 0) {
+      coloursinput.value = max_colours;
+      valid = false;
+   }
+
+   if(valid) {
+      max_positions = positions;
+      max_colours = colours;
+      hidethis.style.display = "none";
+      showthis1.style.display = "inline-block";
+
+      guessinput.maxLength = max_positions;
+      guessinput.size = max_positions;
+      secretinput.maxLength = max_positions;
+      secretinput.size = max_positions;
+
+      heading.innerHTML = "MASTERMIND (" + max_positions + ","
+                                         + max_colours + ")";
+
+      //generate_random_combination(master_combination);
+      fill_solution_set(0);
+      print_solution_set();
+   }
+
+   return(false);
 }
 
 function generate_combination(c) {
@@ -79,9 +121,9 @@ function secret_submitted() {
    var valid = parse_combination(secretinput.value, master_combination);
 
    if(valid) {
-      hidethis.style.display = "none";
-      showthis1.style.display = "inline-block";
+      showthis1.style.display = "none";
       showthis2.style.display = "inline-block";
+      showthis3.style.display = "inline-block";
    }
    else {
       secretinput.value = "";

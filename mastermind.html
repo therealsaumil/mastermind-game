@@ -14,17 +14,33 @@ Built for Riverside School game session - 16, 17 January 2019
 <script src="mastermind.js"></script>
 </head>
 <body>
-   <h1>MASTERMIND</h1>
+   <h1 id="heading">MASTERMIND</h1>
    <h2>by Saumil Shah</h2>
    <span class="leftcontainer">
       <span id="hidethis">
+         <h2>SETUP</h2>
+         <form id="setupform">
+            <table>
+               <tr>
+                  <td>Maximum positions:</td>
+                  <td><input type=text size=2 maxlength=2 name="positions" id="positions"></td>
+               </tr>
+               <tr>
+                  <td>Maximum colours:</td>
+                  <td><input type=text size=2 maxlength=2 name="colours" id="colours"></td>
+               </tr>
+            </table>
+            <input type=submit value="SET VALUES">
+         </form>
+      </span>
+      <span class="hidden" id="showthis1">
          <h2>ENTER SECRET CODE</h2>
          <form id="secretform">
             <input type=text name="secret" id="secret">
             <input type=submit value="SET CODE">
          </form>
       </span>
-      <span class="hidden" id="showthis1">
+      <span class="hidden" id="showthis2">
          <h2>GUESS LIST</h2>
          <table id="output"></table>
          <form id="guessform">
@@ -33,7 +49,7 @@ Built for Riverside School game session - 16, 17 January 2019
          </form>
       </span>
    </span>
-   <span class="hidden rightcontainer" id="showthis2">
+   <span class="hidden rightcontainer" id="showthis3">
       <h2>SOLUTIONS REMAINING <span id="solutions_count"></span><h2>
       <table id="list"></table>
    </span>
