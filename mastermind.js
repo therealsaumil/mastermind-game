@@ -1,8 +1,7 @@
 // mastermind.js
 // by Saumil Shah
 //
-// A simplistic implementation of Donald Knuth's Mastermind
-// algorithm
+// An implementation of Donald Knuth's Mastermind algorithm
 
 var max_colours = 6;
 var max_positions = 4;
@@ -17,6 +16,7 @@ var secretform = null;
 var secretinput = null;
 var positionsinput = null;
 var coloursinput = null;
+var setupheading = null;
 var hidethis = null;
 var showthis1 = null;
 var showthis2 = null;
@@ -25,6 +25,7 @@ var solutions_count = null;
 var master_combination = [];
 var guess_combination = [];
 var solution_set = [];
+var possible_ratings = [];
 
 function init() {
    heading = document.getElementById("heading");
@@ -38,6 +39,7 @@ function init() {
    secretinput = document.getElementById("secret");
    positionsinput = document.getElementById("positions");
    coloursinput = document.getElementById("colours");
+   setupheading = document.getElementById("setupheading");
    hidethis = document.getElementById("hidethis");
    showthis1 = document.getElementById("showthis1");
    showthis2 = document.getElementById("showthis2");
@@ -68,24 +70,31 @@ function setup_submitted() {
       valid = false;
    }
 
-   if(valid) {
-      max_positions = positions;
-      max_colours = colours;
-      hidethis.style.display = "none";
-      showthis1.style.display = "inline-block";
-
-      guessinput.maxLength = max_positions;
-      guessinput.size = max_positions;
-      secretinput.maxLength = max_positions;
-      secretinput.size = max_positions;
-
-      heading.innerHTML = "MASTERMIND (" + max_positions + ","
-                                         + max_colours + ")";
-
-      //generate_random_combination(master_combination);
-      fill_solution_set(0);
-      print_solution_set();
+   if(!valid) {
+      return(false);
    }
+
+   setupheading.innerHTML = "PLEASE WAIT";
+
+   max_positions = positions;
+   max_colours = colours;
+   guessinput.maxLength = max_positions;
+   guessinput.size = max_positions;
+   secretinput.maxLength = max_positions;
+   secretinput.size = max_positions;
+
+   generate_possible_ratings();
+   fill_solution_set(0);
+   calculate_all_candidates();
+
+   hidethis.style.display = "none";
+   showthis1.style.display = "inline-block";
+
+   heading.innerHTML = "MASTERMIND (" + max_positions + ","
+                                      + max_colours + ")";
+
+   //generate_random_combination(master_combination);
+   print_solution_set();
 
    return(false);
 }
@@ -99,15 +108,43 @@ function generate_combination(c) {
    }
 }
 
+// function to generate all possible rating combinations (W, B, etc)
+function generate_possible_ratings() {
+   for(var white = 0; white <= max_positions; white++) {
+      for(var black = 0; black <= max_positions; black++) {
+         if(white + black > max_positions) {
+            continue;
+         }
+         if(white == 1 && black == max_positions - 1) {
+            // impossible situation. If B = n-1 and W = 1, then
+            // it implies that the last colour is in the incorrect
+            // position, with all other colours being in correct positions.
+            // this is absurd, so such a rating combination cannot exist
+            continue;
+         }
+         var r = {white: white, black: black};
+         possible_ratings.push(r);
+      }
+   }
+}
+
 // recursive function to fill up the solution set
 function fill_solution_set(p) {
    for(var i = 0; i < max_colours; i++) {
       guess_combination[p] = i + 1;
       if(p == max_positions - 1) {
+
+         var ratings_candidates = {};
+         for(var j = 0; j < possible_ratings.length; j++) {
+            var rating_string = get_rating_string(possible_ratings[j]);
+            ratings_candidates[rating_string] = 0;
+         }
          solution_set.push({
             combination: Array.from(guess_combination),
             rating: {white: 0, black:0},
-            included: true
+            included: true,
+            candidates: ratings_candidates,
+            max: 0
          });
       }
       else {
@@ -147,7 +184,7 @@ function guess_submitted() {
 
    if(valid) {
       var r = compare_combinations(guess_combination, master_combination);
-      add_row(output, guess_combination, r);
+      add_guess(guess_combination, r);
       var possibilities = process_solution_set(guess_combination, r);
       print_solution_set();
    }
@@ -159,13 +196,20 @@ function guess_submitted() {
 // let the computer choose the first available combination in the
 // solution set as a possible guess
 function make_guess() {
+   var minmax = solution_set[0].max
+   var min_index = 0;
+
    for(var i = 0; i < solution_set.length; i++) {
       if(solution_set[i].included) {
-         var guessvalue = solution_set[i].combination.join('');
-         return(guessvalue);
+         if(solution_set[i].max < minmax) {
+            minmax = solution_set[i].max;
+            min_index = i;
+         }
       }
    }
-   return("");    // should never be reached
+
+   var guessvalue = solution_set[min_index].combination.join('');
+   return(guessvalue);
 }
 
 function parse_combination(v, c) {
@@ -221,11 +265,7 @@ function compare_combinations(c1, c2) {
    return(rating);
 }
 
-function add_row(e, c, r) {
-   e.appendChild(make_row(c, r));
-}
-
-function make_row(c, r) {
+function add_guess(c, r) {
    var tr = document.createElement("tr");
    for(var i = 0; i < max_positions; i++) {
       var td = document.createElement("td");
@@ -234,19 +274,47 @@ function make_row(c, r) {
    }
 
    if(r != null) {
-      var rating_string = "";
-      for(var i = 0; i < r.white; i++) {
-         rating_string += "W";
-      }
-      for(var i = 0; i < r.black; i++) {
-         rating_string += "B";
-      }
       var td = document.createElement("td");
-      td.innerHTML = rating_string;
+      td.innerHTML = get_rating_string(r);
       td.className = "rating";
       tr.appendChild(td);
    }
-   return(tr);
+
+   output.appendChild(tr);
+}
+
+function print_ith_solution(s) {
+   var tr = document.createElement("tr");
+   for(var i = 0; i < max_positions; i++) {
+      var td = document.createElement("td");
+      td.innerHTML = s.combination[i];
+      tr.appendChild(td);
+   }
+
+   var candidate_keys = Object.keys(s.candidates);
+   for(var i = 0; i < candidate_keys.length; i++) {
+      var td = document.createElement("td");
+      td.className = "candidates";
+      var k = (candidate_keys[i] == "") ? "none" : candidate_keys[i];
+      td.innerHTML = k + "," + s.candidates[candidate_keys[i]];
+      if(s.candidates[candidate_keys[i]] == s.max) {
+         td.className += " red";
+      }
+      tr.appendChild(td);
+   }
+
+   list.appendChild(tr);
+}
+
+function get_rating_string(r) {
+   var rating_string = "";
+   for(var i = 0; i < r.white; i++) {
+      rating_string += "W";
+   }
+   for(var i = 0; i < r.black; i++) {
+      rating_string += "B";
+   }
+   return(rating_string);
 }
 
 function process_solution_set(c, r) {
@@ -279,12 +347,46 @@ function print_solution_set() {
    var solutions_remaining = 0;
    for(var i = 0; i < solution_set.length; i++) {
       if(solution_set[i].included) {
-         add_row(list, solution_set[i].combination);
+         print_ith_solution(solution_set[i]);
          solutions_remaining++;
       }
    }
 
    solutions_count.innerHTML = solutions_remaining;
+}
+
+function calculate_all_candidates() {
+   for(var i = 0; i < solution_set.length; i++) {
+      // calculate the candidates array for the ith combination
+      solution_set[i].max = calculate_candidates_array(solution_set[i]);
+   }
+}
+
+// for an element in the solution set, calculate the number of
+// candidates for each possible rating combination
+function calculate_candidates_array(s) {
+   var max = 0;
+   for(var j = 0; j < possible_ratings.length; j++) {
+      var candidates = calculate_candidates(s.combination, possible_ratings[j]);
+      s.candidates[get_rating_string(possible_ratings[j])] = candidates;
+      if(candidates > max) {
+         max = candidates;
+      }
+   }
+   return(max);
+}
+
+// for a given combination and rating, calculate how many
+// items can we eliminate from the solution set
+function calculate_candidates(c, r) {
+   var candidates = 0;
+   for(var i = 0; i < solution_set.length; i++) {
+      var rating = compare_combinations(c, solution_set[i].combination);
+      if(equivalent_rating(rating, r)) {
+         candidates++;
+      }
+   }
+   return(candidates);
 }
 
 function equivalent_rating(r1, r2) {

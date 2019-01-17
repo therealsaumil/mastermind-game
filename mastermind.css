@@ -17,9 +17,23 @@ h2 {
    font-size: 24px;
 }
 
-input, table {
+input {
    font-size: 20px;
    font-weight: normal;
+}
+
+table {
+   font-size: 20px;
+   font-weight: normal;
+   width: 100%;
+}
+
+table#list {
+   font-size: 12px;
+}
+
+td {
+   white-space: nowrap;
 }
 
 span {
@@ -48,4 +62,15 @@ span {
 .rating {
    padding: 0px;
    padding-left: 10px;
+}
+
+.candidates {
+   padding: 0px;
+   padding-left: 5px;
+   padding-right: 5px;
+   border-left: 1px dashed black;
+}
+
+.red {
+   color: red;
 }
