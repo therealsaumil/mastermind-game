@@ -10,6 +10,7 @@ var heading = null;
 var output = null;
 var list = null;
 var setupform = null;
+var setvalues = null;
 var guessform = null;
 var guessinput = null;
 var secretform = null;
@@ -32,6 +33,7 @@ function init() {
    output = document.getElementById("output");
    list = document.getElementById("list");
    setupform = document.getElementById("setupform");
+   setvalues = document.getElementById("setvalues");
    guessform = document.getElementById("guessform");
    guessinput = document.getElementById("guess");
    solutions_count = document.getElementById("solutions_count");
@@ -74,7 +76,9 @@ function setup_submitted() {
       return(false);
    }
 
-   setupheading.innerHTML = "PLEASE WAIT";
+   update_setup_heading(0);
+   setvalues.value = "PLEASE WAIT";
+   setvalues.disabled = true;
 
    max_positions = positions;
    max_colours = colours;
@@ -86,7 +90,10 @@ function setup_submitted() {
    generate_possible_ratings();
    fill_solution_set(0);
    calculate_all_candidates();
+   return(false);
+}
 
+function play_game() {
    hidethis.style.display = "none";
    showthis1.style.display = "inline-block";
 
@@ -95,8 +102,6 @@ function setup_submitted() {
 
    //generate_random_combination(master_combination);
    print_solution_set();
-
-   return(false);
 }
 
 function generate_combination(c) {
@@ -358,7 +363,15 @@ function print_solution_set() {
 function calculate_all_candidates() {
    for(var i = 0; i < solution_set.length; i++) {
       // calculate the candidates array for the ith combination
-      solution_set[i].max = calculate_candidates_array(solution_set[i]);
+      setTimeout(function(x) {
+         if(x % 10 == 0) {
+            update_setup_heading(x);
+         }
+         solution_set[x].max = calculate_candidates_array(solution_set[x]);
+         if(x == solution_set.length - 1) {
+            play_game();
+         }
+      }, 0, i);
    }
 }
 
@@ -398,6 +411,11 @@ function equivalent_rating(r1, r2) {
 
 function choose_random_colour(m) {
    return(Math.floor(Math.random() * max_colours) + 1);
+}
+
+function update_setup_heading(n) {
+   setupheading.innerHTML = "CALCULATING " + n + "/" +
+                              solution_set.length;
 }
 
 window.onload = init;

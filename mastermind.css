@@ -56,7 +56,7 @@ span {
 
 .rightcontainer {
    padding-left: 20px;
-   border-left: 1px dashed black;
+   border-left: 1px solid black;
 }
 
 .rating {
@@ -68,7 +68,7 @@ span {
    padding: 0px;
    padding-left: 5px;
    padding-right: 5px;
-   border-left: 1px dashed black;
+   border-left: 1px dotted black;
 }
 
 .red {
