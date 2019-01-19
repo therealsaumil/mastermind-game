@@ -148,6 +148,7 @@ function fill_solution_set(p) {
             combination: Array.from(guess_combination),
             rating: {white: 0, black:0},
             included: true,
+            played: false,
             candidates: ratings_candidates,
             max: 0
          });
@@ -188,6 +189,13 @@ function guess_submitted() {
    var valid = parse_combination(guessinput.value, guess_combination);
 
    if(valid) {
+      // mark the guessed combination as played
+      for(var i = 0; i < solution_set.length; i++) {
+         if(guessinput.value == solution_set[i].combination.join('')) {
+            solution_set[i].played = true;
+            break;
+         }
+      }
       var r = compare_combinations(guess_combination, master_combination);
       add_guess(guess_combination, r);
       var possibilities = process_solution_set(guess_combination, r);
@@ -205,6 +213,9 @@ function make_guess() {
    var min_index = 0;
 
    for(var i = 0; i < solution_set.length; i++) {
+      if(solution_set[i].played) {
+         continue;
+      }
       if(solution_set[i].included) {
          if(solution_set[i].max < minmax) {
             minmax = solution_set[i].max;
@@ -290,6 +301,10 @@ function add_guess(c, r) {
 
 function print_ith_solution(s) {
    var tr = document.createElement("tr");
+   if(!s.included) {
+      tr.className = "grey";
+   }
+
    for(var i = 0; i < max_positions; i++) {
       var td = document.createElement("td");
       td.innerHTML = s.combination[i];
