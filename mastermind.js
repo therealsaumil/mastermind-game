@@ -13,6 +13,7 @@ var setupform = null;
 var setvalues = null;
 var guessform = null;
 var guessinput = null;
+var makeguessbutton = null;
 var secretform = null;
 var secretinput = null;
 var positionsinput = null;
@@ -36,6 +37,7 @@ function init() {
    setvalues = document.getElementById("setvalues");
    guessform = document.getElementById("guessform");
    guessinput = document.getElementById("guess");
+   makeguessbutton = document.getElementById("makeguessbutton");
    solutions_count = document.getElementById("solutions_count");
    secretform = document.getElementById("secretform");
    secretinput = document.getElementById("secret");
@@ -101,6 +103,7 @@ function play_game() {
                                       + max_colours + ")";
 
    //generate_random_combination(master_combination);
+   erase_solution_set_list();
    print_solution_set();
 }
 
@@ -198,8 +201,14 @@ function guess_submitted() {
       }
       var r = compare_combinations(guess_combination, master_combination);
       add_guess(guess_combination, r);
-      var possibilities = process_solution_set(guess_combination, r);
-      print_solution_set();
+      if(r.black == max_positions) {
+         makeguessbutton.disabled = true;
+         makeguessbutton.value = "SOLVED";
+      }
+      else {
+         var possibilities = process_solution_set(guess_combination, r);
+         recalc_all_candidates();
+      }
    }
 
    guessinput.value = "";
@@ -209,22 +218,36 @@ function guess_submitted() {
 // let the computer choose the first available combination in the
 // solution set as a possible guess
 function make_guess() {
-   var minmax = solution_set[0].max
+   var minmax = solution_set.length;
+   var minmax_included = minmax;
+   var ret_index;
    var min_index = 0;
+   var min_index_included = 0;
 
    for(var i = 0; i < solution_set.length; i++) {
       if(solution_set[i].played) {
          continue;
       }
-      if(solution_set[i].included) {
-         if(solution_set[i].max < minmax) {
-            minmax = solution_set[i].max;
-            min_index = i;
-         }
+      if(solution_set[i].max < minmax) {
+         minmax = solution_set[i].max;
+         min_index = i;
+      }
+      if(solution_set[i].max < minmax_included && solution_set[i].included) {
+         minmax_included = solution_set[i].max;
+         min_index_included = i;
       }
    }
 
-   var guessvalue = solution_set[min_index].combination.join('');
+   // if the minimum value exists within the set of included
+   // solutions, use that. if not, use the overall minimum value
+   if(minmax < minmax_included) {
+      ret_index = min_index;
+   }
+   else {
+      ret_index = min_index_included;
+   }
+
+   var guessvalue = solution_set[ret_index].combination.join('');
    return(guessvalue);
 }
 
@@ -358,16 +381,20 @@ function process_solution_set(c, r) {
    return(retval);
 }
 
-function print_solution_set() {
+function erase_solution_set_list() {
    // empty out the solution set list
    while(list.firstChild) {
       list.removeChild(list.firstChild);
    }
+}
+
+function print_solution_set() {
+   solution_set.sort(compare_max);
 
    var solutions_remaining = 0;
    for(var i = 0; i < solution_set.length; i++) {
+      print_ith_solution(solution_set[i]);
       if(solution_set[i].included) {
-         print_ith_solution(solution_set[i]);
          solutions_remaining++;
       }
    }
@@ -390,6 +417,43 @@ function calculate_all_candidates() {
    }
 }
 
+function recalc_all_candidates() {
+   erase_solution_set_list();
+   makeguessbutton.disabled = true;
+   makeguessbutton.value = "PLEASE WAIT";
+   for(var i = 0; i < solution_set.length; i++) {
+      // calculate the candidates array for the ith combination
+      setTimeout(function(x) {
+         solution_set[x].max = calculate_candidates_array(solution_set[x]);
+         if(x == solution_set.length - 1) {
+            makeguessbutton.disabled = false;
+            makeguessbutton.value = "MAKE GUESS";
+            print_solution_set();
+         }
+      }, 0, i);
+   }
+}
+
+// sorting function
+function compare_max(a, b) {
+   if(a.max == b.max) {
+      if(a.included != b.included) {
+         return(!a.included - !b.included);
+      }
+      else {
+         // if max values are equal, choose the lower of the two
+         // numeric values of the combination
+         var value_a = parseInt(a.combination.join(''));
+         var value_b = parseInt(b.combination.join(''));
+         return(value_a - value_b);
+      }
+   }
+   else {
+      // otherwise return the element with the lower max value
+      return(a.max - b.max);
+   }
+}
+
 // for an element in the solution set, calculate the number of
 // candidates for each possible rating combination
 function calculate_candidates_array(s) {
@@ -409,6 +473,9 @@ function calculate_candidates_array(s) {
 function calculate_candidates(c, r) {
    var candidates = 0;
    for(var i = 0; i < solution_set.length; i++) {
+      if(!solution_set[i].included) {
+         continue;
+      }
       var rating = compare_combinations(c, solution_set[i].combination);
       if(equivalent_rating(rating, r)) {
          candidates++;
