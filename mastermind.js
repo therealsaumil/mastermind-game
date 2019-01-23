@@ -23,11 +23,14 @@ var hidethis = null;
 var showthis1 = null;
 var showthis2 = null;
 var showthis3 = null;
+var solutionsheading = null;
 var solutions_count = null;
 var master_combination = [];
 var guess_combination = [];
+var total_guesses = 0;
 var solution_set = [];
 var possible_ratings = [];
+var pending_task_queue = [];
 
 function init() {
    heading = document.getElementById("heading");
@@ -38,6 +41,7 @@ function init() {
    guessform = document.getElementById("guessform");
    guessinput = document.getElementById("guess");
    makeguessbutton = document.getElementById("makeguessbutton");
+   solutionsheading = document.getElementById("solutionsheading");
    solutions_count = document.getElementById("solutions_count");
    secretform = document.getElementById("secretform");
    secretinput = document.getElementById("secret");
@@ -91,6 +95,7 @@ function setup_submitted() {
 
    generate_possible_ratings();
    fill_solution_set(0);
+   set_max_values();
    calculate_all_candidates();
    return(false);
 }
@@ -152,6 +157,8 @@ function fill_solution_set(p) {
             rating: {white: 0, black:0},
             included: true,
             played: false,
+            unique_colours: get_unique_colours(guess_combination),
+            max_single_colour: get_max_single_colour(guess_combination),
             candidates: ratings_candidates,
             max: 0
          });
@@ -160,6 +167,59 @@ function fill_solution_set(p) {
          fill_solution_set(p + 1);
       }
    }
+}
+
+function set_max_values() {
+   for(var i = 0; i < solution_set.length; i++) {
+      solution_set[i].max = solution_set.length;
+   }
+}
+
+// function to get unique colours per combination
+function get_unique_colours(c) {
+   var temp = Array.from(c);
+   temp.sort();
+
+   var unique_colours = 0;
+   var last_colour = 0;
+
+   for(var i = 0; i < temp.length; i++) {
+      if(last_colour != temp[i]) {
+         unique_colours++;
+         last_colour = temp[i];
+      }
+   }
+
+   return(unique_colours);
+}
+
+// function to get a maximum single colour per combination
+function get_max_single_colour(c) {
+   var temp = Array.from(c);
+   temp.sort();
+
+   var last_colour = 0;
+   var max_count = 0;
+   var running_count = 0;
+
+   for(var i = 0; i < temp.length; i++) {
+      if(last_colour != temp[i]) {
+         if(running_count > max_count) {
+            max_count = running_count;
+         }
+         running_count = 1;
+         last_colour = temp[i];
+      }
+      else {
+         running_count++;
+      }
+   }
+
+   if(running_count > max_count) {
+      max_count = running_count;
+   }
+
+   return(max_count);
 }
 
 // set the master combination and hide the value
@@ -305,6 +365,8 @@ function compare_combinations(c1, c2) {
 }
 
 function add_guess(c, r) {
+   total_guesses++;
+
    var tr = document.createElement("tr");
    for(var i = 0; i < max_positions; i++) {
       var td = document.createElement("td");
@@ -338,10 +400,12 @@ function print_ith_solution(s) {
    for(var i = 0; i < candidate_keys.length; i++) {
       var td = document.createElement("td");
       td.className = "candidates";
-      var k = (candidate_keys[i] == "") ? "none" : candidate_keys[i];
-      td.innerHTML = k + "," + s.candidates[candidate_keys[i]];
-      if(s.candidates[candidate_keys[i]] == s.max) {
-         td.className += " red";
+      if(s.candidates[candidate_keys[i]] > 0) {
+         var k = (candidate_keys[i] == "") ? "none" : candidate_keys[i];
+         td.innerHTML = k + "," + s.candidates[candidate_keys[i]];
+         if(s.candidates[candidate_keys[i]] == s.max) {
+            td.className += " red";
+         }
       }
       tr.appendChild(td);
    }
@@ -393,7 +457,14 @@ function print_solution_set() {
 
    var solutions_remaining = 0;
    for(var i = 0; i < solution_set.length; i++) {
-      print_ith_solution(solution_set[i]);
+      if(max_positions > 4) {
+         if(solution_set[i].included) {
+            print_ith_solution(solution_set[i]);
+         }
+      }
+      else {
+         print_ith_solution(solution_set[i]);
+      }
       if(solution_set[i].included) {
          solutions_remaining++;
       }
@@ -403,35 +474,85 @@ function print_solution_set() {
 }
 
 function calculate_all_candidates() {
+   // first sort the array according to the number of unique colours
+   // and maximum single colour counts
+   solution_set.sort(compare_unique_max_colours);
+
+   var last_unique_colours = 0;
+   var last_max_single_colour = 0;
+
+   // wipe out the pending task queue
+   pending_task_queue.splice(0, pending_task_queue.length);
+
    for(var i = 0; i < solution_set.length; i++) {
-      // calculate the candidates array for the ith combination
-      setTimeout(function(x) {
-         if(x % 10 == 0) {
-            update_setup_heading(x);
-         }
-         solution_set[x].max = calculate_candidates_array(solution_set[x]);
-         if(x == solution_set.length - 1) {
-            play_game();
-         }
-      }, 0, i);
+
+      // we will calculate the possibilities for only one item
+      // from the set of solutions having the same unique and max colour counts
+      if(last_unique_colours != solution_set[i].unique_colours ||
+         last_max_single_colour != solution_set[i].max_single_colour) {
+         // calculate the candidates array for the ith combination
+
+         pending_task_queue.push(i);
+         setTimeout(function(x) {
+            //if(x % 10 == 0) {
+            //   update_setup_heading(x);
+            //}
+            solution_set[x].max = calculate_candidates_array(solution_set[x]);
+            pending_task_queue.pop();
+            //if(x == solution_set.length - 1) {
+            if(pending_task_queue.length == 0) {
+               play_game();
+            }
+         }, 0, i);
+
+         //solution_set[i].max = calculate_candidates_array(solution_set[i]);
+
+         last_unique_colours = solution_set[i].unique_colours;
+         last_max_single_colour = solution_set[i].max_single_colour;
+      }
    }
+
+   //play_game();
 }
 
 function recalc_all_candidates() {
    erase_solution_set_list();
+
+   // wipe out the pending task queue
+   pending_task_queue.splice(0, pending_task_queue.length);
+
    makeguessbutton.disabled = true;
    makeguessbutton.value = "PLEASE WAIT";
+   solutionsheading.innerHTML = "SOLUTIONS REMAINING TO BE PROCESSED ...";
+
    for(var i = 0; i < solution_set.length; i++) {
+      // optimization - play the fully optimized version for max_positions <= 4
+      // otherwise only search through the set of included solutions
+      if(max_positions > 4 && !solution_set[i].included) {
+         continue;
+      }
+      pending_task_queue.push(i);
       // calculate the candidates array for the ith combination
       setTimeout(function(x) {
+         solutions_count.innerHTML = pending_task_queue.length;
+
          solution_set[x].max = calculate_candidates_array(solution_set[x]);
-         if(x == solution_set.length - 1) {
+         pending_task_queue.pop();
+         solutions_count.innerHTML = pending_task_queue.length;
+
+         if(pending_task_queue.length == 0) {
             makeguessbutton.disabled = false;
             makeguessbutton.value = "MAKE GUESS";
+            solutionsheading.innerHTML = "SOLUTIONS REMAINING";
+            solutions_count.innerHTML = "";
             print_solution_set();
          }
       }, 0, i);
+      //solution_set[i].max = calculate_candidates_array(solution_set[i]);
    }
+   //makeguessbutton.disabled = false;
+   //makeguessbutton.value = "MAKE GUESS";
+   //print_solution_set();
 }
 
 // sorting function
@@ -452,6 +573,24 @@ function compare_max(a, b) {
       // otherwise return the element with the lower max value
       return(a.max - b.max);
    }
+}
+
+// sorting function
+function compare_unique_max_colours(a, b) {
+   var unique_colours_diff = a.unique_colours - b.unique_colours;
+   var max_single_colour_diff = a.max_single_colour - b.max_single_colour;
+   var value_a = parseInt(a.combination.join(''));
+   var value_b = parseInt(b.combination.join(''));
+
+   if(unique_colours_diff == 0 && max_single_colour_diff == 0) {
+      return(value_a - value_b);
+   }
+
+   if(unique_colours_diff == 0) {
+      return(max_single_colour_diff);
+   }
+
+   return(unique_colours_diff);
 }
 
 // for an element in the solution set, calculate the number of
