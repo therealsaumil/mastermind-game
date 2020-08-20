@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<!--
+mastermind.html
+by Saumil Shah
+
+A quick and simple implementation of Mastermind
+
+21 August 2020
+-->
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" type="text/css" href="mastermind.css">
+<script src="fastermind.js"></script>
+</head>
+<body>
+   <h1 id="heading">FASTERMIND</h1>
+   <h2>by Saumil Shah</h2>
+   <span class="leftcontainer">
+      <span id="hidethis">
+         <h2 id="setupheading">SETUP</h2>
+         <form id="setupform">
+            <table>
+               <tr>
+                  <td>Maximum positions:</td>
+                  <td><input type=text size=2 maxlength=2 name="positions" id="positions"></td>
+               </tr>
+               <tr>
+                  <td>Maximum colours:</td>
+                  <td><input type=text size=2 maxlength=2 name="colours" id="colours"></td>
+               </tr>
+            </table>
+            <input id="setvalues" type=submit value="SET VALUES">
+         </form>
+      </span>
+      <span class="hidden" id="showthis1">
+         <h2>ENTER SECRET CODE</h2>
+         <form id="secretform">
+            <input type=password name="secret" id="secret">
+            <input type=submit value="SET CODE">
+         </form>
+      </span>
+      <span class="hidden" id="showthis2">
+         <h2>GUESS LIST</h2>
+         <table id="output"></table>
+         <form id="guessform">
+            <input type=text name="guess" id="guess">
+            <input type=submit id="makeguessbutton" value="MAKE GUESS">
+         </form>
+      </span>
+   </span>
+   <span class="hidden rightcontainer" id="showthis3">
+      <h2><span id="solutionsheading">SOLUTIONS REMAINING</span> <span id="solutions_count"></span></h2>
+      <table id="list"></table>
+   </span>
+</body>
+</html>
