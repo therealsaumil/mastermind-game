@@ -123,6 +123,7 @@ function fill_solution_set(p) {
       if(p == max_positions - 1) {
 
          solution_set.push({
+            index: solution_set.length,
             combination: Array.from(guess_combination),
             rating: {white: 0, black:0},
             included: true,
@@ -331,11 +332,15 @@ function print_ith_solution(s) {
 
    var tr = document.createElement("tr");
 
+   var td1 = document.createElement("td");
+   td1.innerHTML = s.index;
+   tr.appendChild(td1);
+
+   var td2 = document.createElement("td");
    for(var i = 0; i < max_positions; i++) {
-      var td = document.createElement("td");
-      td.innerHTML = s.combination[i];
-      tr.appendChild(td);
+      td2.innerHTML += s.combination[i];
    }
+   tr.appendChild(td2);
 
    list.appendChild(tr);
 }
@@ -366,6 +371,7 @@ function process_solution_set(c, r) {
 
       if(same_combination(c, solution_set[i].combination)) {
          solution_set[i].rating = r;
+         break;
       }
    }
 }
@@ -383,7 +389,7 @@ function print_solution_set() {
    var solutions_remaining = 0;
    for(var i = 0; i < solution_set.length; i++) {
       print_ith_solution(solution_set[i]);
-      if(solution_set[i].included) {
+      if(solution_set[i].included && !solution_set[i].played) {
          solutions_remaining++;
       }
    }
